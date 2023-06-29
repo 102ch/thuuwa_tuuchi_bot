@@ -43,6 +43,12 @@ async def on_voice_state_update(member: discord.Member, before:discord.VoiceStat
             e_time[before.channel.id]=0
             await channel.send(embed=embed)
 
+@tree.command(name="set", description="匿名ちゃんがこのチャンネルに降臨するよ！")
+async def set(interaction: Interaction):
+    global channel_id
+    channel_id = interaction.channel.id
+    await interaction.response.send_message("変更しました！")
+
 async def main():
     # start the client
     async with bot:
