@@ -24,6 +24,7 @@ async def on_ready():
 @bot.event
 async def on_voice_state_update(member: discord.Member, before:discord.VoiceState, after:discord.VoiceState):
     if after.channel and not before.channel and len(after.channel.members)==1:
+        e_time[after.channel.id]=datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
         if not member.status == discord.Status.idle:
             channel = bot.get_channel(channel_id)
             embed=discord.Embed(title="通話開始", color=0xffb6c1)
@@ -31,15 +32,16 @@ async def on_voice_state_update(member: discord.Member, before:discord.VoiceStat
             embed.add_field(name="始めた人", value=member.display_name, inline=False)
             embed.add_field(name="始めた時刻", value=datetime.datetime.now(pytz.timezone('Asia/Tokyo')), inline=False)
             embed.set_thumbnail(url=member.display_avatar.url)
-            e_time[after.channel.id]=datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
             await channel.send(content="@everyone", embed=embed)
     
     if before.channel and not after.channel and len(before.channel.members)==0:
-        channel = bot.get_channel(channel_id)
-        embed=discord.Embed(title="通話終了", color=0x6a5acd)
-        embed.add_field(name="チャンネル", value=before.channel.name, inline=False)
-        embed.add_field(name="通話時間", value=datetime.datetime.now(pytz.timezone('Asia/Tokyo'))-e_time[before.channel.id], inline=False)
-        await channel.send(embed=embed)
+        if not member.status == discord.Status.idle:
+            channel = bot.get_channel(channel_id)
+            embed=discord.Embed(title="通話終了", color=0x6a5acd)
+            embed.add_field(name="チャンネル", value=before.channel.name, inline=False)
+            embed.add_field(name="通話時間", value=datetime.datetime.now(pytz.timezone('Asia/Tokyo'))-e_time[before.channel.id], inline=False)
+            e_time[before.channel.id]=0
+            await channel.send(embed=embed)
 
 async def main():
     # start the client
