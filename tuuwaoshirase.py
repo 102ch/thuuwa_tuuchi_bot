@@ -4,10 +4,13 @@ from discord import Embed, Interaction, ui
 import asyncio
 import datetime
 import pytz
+import os
 client = discord.Client(intents=discord.Intents.all())
-TOKEN=""
-application_id=""
-channel_id = 841990187047583764
+
+TOKEN= os.environ['DISCORD_BOT_TOKEN']
+application_id= os.environ['DISCORD_APPLICATION_ID']
+channel_id = os.environ['DISCORD_CHANNEL_ID']
+
 e_time={}
 bot = commands.Bot(
     command_prefix="/",

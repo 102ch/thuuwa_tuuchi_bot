@@ -1,0 +1,10 @@
+version: "3.1"
+
+services:
+  app:
+    build: .
+    tty: true
+    environment:
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+      - DISCORD_APPLICATION_ID=${DISCORD_APPLICATION_ID}
+      - DISCORD_CHANNEL_ID=${DISCORD_CHANNEL_ID}
