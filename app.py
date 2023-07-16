@@ -10,7 +10,7 @@ client = discord.Client(intents=discord.Intents.all())
 TOKEN= os.environ['DISCORD_BOT_TOKEN']
 application_id= os.environ['DISCORD_APPLICATION_ID']
 
-initial_channel=os.environ['DISCORD_CHANNEL_ID']
+initial_channel=int(os.environ['DISCORD_CHANNEL_ID'])
 initial_text="@everyone"
 initial_flag=True
 
@@ -40,18 +40,22 @@ async def on_voice_state_update(member: discord.Member, before:discord.VoiceStat
             embed.add_field(name="通話時間", value=datetime.datetime.now(pytz.timezone('Asia/Tokyo'))-e_time[before.channel.id], inline=False)
             e_time[before.channel.id]=0
             await channel.send(embed=embed)
-
     if after.channel and not after.channel==before.channel and len(after.channel.members)==1:
+        print("voice state update2")
         e_time[after.channel.id]=datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
         if not member.status == discord.Status.idle:
-            channel = bot.get_channel(channel_id)
-            embed=discord.Embed(title="通話開始", color=0xffb6c1)
-            embed.add_field(name="チャンネル", value=after.channel.name, inline=False)
-            embed.add_field(name="始めた人", value=member.display_name, inline=False)
-            embed.add_field(name="始めた時刻", value=datetime.datetime.now(pytz.timezone('Asia/Tokyo')), inline=False)
-            embed.set_thumbnail(url=member.display_avatar.url)
-            await channel.send(content=notitext, embed=embed)
-
+            print(channel_id)
+            try:
+                print(channel_id)
+                channel = bot.get_channel(channel_id)
+                embed=discord.Embed(title="通話開始", color=0xffb6c1)
+                embed.add_field(name="チャンネル", value=after.channel.name, inline=False)
+                embed.add_field(name="始めた人", value=member.display_name, inline=False)
+                embed.add_field(name="始めた時刻", value=datetime.datetime.now(pytz.timezone('Asia/Tokyo')), inline=False)
+                embed.set_thumbnail(url=member.display_avatar.url)
+                await channel.send(content=notitext, embed=embed)
+            except Exception as e:
+                print(e)
 
 @tree.command(name="set", description="通知お知らせ君がこのチャンネルに降臨するよ！")
 async def set(interaction: Interaction):
@@ -83,7 +87,6 @@ async def textchange(interaction:Interaction, newtext:str):
     global notitext
     notitext=newtext
     await interaction.response.send_message(content=f"「{notitext}」に変更します!")
-
 class resetbutton(ui.Button):
     def __init__(self, label, initial):
         super().__init__(label=label)
