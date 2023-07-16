@@ -31,9 +31,3 @@ jobs:
           tags: ghcr.io/102ch/thuuwa-tuuchi-bot:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - name: Deploy to Server
-        uses: JimCronqvist/action-ssh@master
-        with:
-          hosts: 'root@mc.k1h.dev:5001'
-          privateKey: ${{ secrets.SSH_PRIVATEKEY }}
-          command: cd thuuwa_tuuchi_bot; git pull; docker pull ghcr.io/102ch/thuuwa-tuuchi-bot:latest; docker-compose -f docker-compose-release.yaml up -d
