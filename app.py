@@ -9,6 +9,7 @@ client = discord.Client(intents=discord.Intents.all())
 
 TOKEN= os.environ['DISCORD_BOT_TOKEN']
 application_id= os.environ['DISCORD_APPLICATION_ID']
+guild_id =
 
 initial_channel=int(os.environ['DISCORD_CHANNEL_ID'])
 initial_text="@everyone"
@@ -28,11 +29,14 @@ tree = bot.tree
 @bot.event
 async def on_ready():
     await tree.sync()   
+    guild = bot.get_guild(guild_id)
+    for voicechannel in guild.voice_channels:
+        channelonoff[voicechannel.id] = True
     print('connected')
 
 @bot.event
 async def on_voice_state_update(member: discord.Member, before:discord.VoiceState, after:discord.VoiceState):
-    if before.channel and not after.channel==before.channel and len(before.channel.members)==0 and changeflag:
+    if before.channel and len(before.channel.members)==0 and changeflag and channelonoff[before.channel.id]:
         if not member.status == discord.Status.idle:
             channel = bot.get_channel(channel_id)
             embed=discord.Embed(title="通話終了", color=0x6a5acd)
@@ -40,7 +44,7 @@ async def on_voice_state_update(member: discord.Member, before:discord.VoiceStat
             embed.add_field(name="通話時間", value=datetime.datetime.now(pytz.timezone('Asia/Tokyo'))-e_time[before.channel.id], inline=False)
             e_time[before.channel.id]=0
             await channel.send(embed=embed)
-    if after.channel and not after.channel==before.channel and len(after.channel.members)==1:
+    if after.channel and len(after.channel.members)==1 and channelonoff[after.channel.id]:
         print("voice state update2")
         e_time[after.channel.id]=datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
         if not member.status == discord.Status.idle:
@@ -121,6 +125,44 @@ async def reset(interaction:Interaction):
     view.add_item(resetbutton("通知時テキスト", initial_text))
     view.add_item(resetbutton("全て", "allreset"))
     await interaction.response.send_message(content="リセットする項目について選んでください", view=view)
+
+class onoffbutton(ui.Button):
+    def __init__(self, channelname,channelid, onoff):
+        super().__init__(label=channelname, style=discord.ButtonStyle.primary if onoff else discord.ButtonStyle.secondary) #, style="Destructive" if onoff else "Secondary"
+        self.channelname=channelname
+        self.chnanelid=channelid
+        self.onoff = onoff
+
+    async def callback(self, interaction:discord.Interaction):
+        global channelonoff
+        channelonoff[self.chnanelid] = False if channelonoff[self.chnanelid] else True
+        await interaction.response.edit_message(content=f'{self.channelname}を{"オン" if channelonoff[self.chnanelid] else "オフ"}に切り替えました', view=None)
+
+class chancel_button(ui.Button):
+    def __init__(self):
+        super().__init__(label="中止",style=discord.ButtonStyle.red)
+
+    async def callback(self, interaction:discord.Interaction):
+        await interaction.response.edit_message(content="変更しません", view=None)
+
+@tree.command(name="offchannel", description="オフにするチャンネルを選べます")
+async def offchannel(interaction:Interaction):
+    view=ui.View()
+    guild = bot.get_guild(guild_id)
+    for voicechannel in guild.voice_channels:
+        view.add_item(onoffbutton(voicechannel.name,voicechannel.id, channelonoff[voicechannel.id]))
+    view.add_item(chancel_button())
+
+    await interaction.response.send_message(content="オンオフを切り替えられます。(青がオン)", view=view) #ephemeral = True
+
+@tree.command(name="offlist", description="オフにするチャンネルを選べます")
+async def offlist(interaction:Interaction):
+    embed=discord.Embed(title="チャンネルのオンオフです", color=0x00E5FF)
+    guild = bot.get_guild(guild_id)
+    for voicechannel in guild.voice_channels:
+        embed.add_field(name=voicechannel.name, value=":o:" if channelonoff[voicechannel.id] else ":x:", inline=False)
+    await interaction.response.send_message(embed=embed)
+
 
 async def main():
     # start the client
