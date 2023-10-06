@@ -144,9 +144,7 @@ async def reset(interaction: Interaction):
 
 class onoffbutton(ui.Button):
     def __init__(self, channelname, channelid, onoff):
-        # , style="Destructive" if onoff else "Secondary"
-        super().__init__(label=channelname,
-                         style=discord.ButtonStyle.primary if onoff else discord.ButtonStyle.secondary)
+        super().__init__(label=channelname, style=discord.ButtonStyle.primary if onoff else discord.ButtonStyle.secondary)
         self.channelname = channelname
         self.chnanelid = channelid
         self.onoff = onoff
