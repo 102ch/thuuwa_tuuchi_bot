@@ -8,8 +8,8 @@ import os
 client = discord.Client(intents=discord.Intents.all())
 
 TOKEN = os.environ['DISCORD_BOT_TOKEN']
-application_id = os.environ['DISCORD_APPLICATION_ID']
-guild_id = os.environ['DISCORD_GUILD_ID']
+application_id = int(os.environ['DISCORD_APPLICATION_ID'])
+guild_id = int(os.environ['DISCORD_GUILD_ID'])
 
 initial_channel = int(os.environ['DISCORD_CHANNEL_ID'])
 initial_text = "@everyone"
@@ -144,7 +144,8 @@ async def reset(interaction: Interaction):
 
 class onoffbutton(ui.Button):
     def __init__(self, channelname, channelid, onoff):
-        super().__init__(label=channelname, style=discord.ButtonStyle.primary if onoff else discord.ButtonStyle.secondary)
+        super().__init__(label=channelname,
+                         style=discord.ButtonStyle.primary if onoff else discord.ButtonStyle.secondary)
         self.channelname = channelname
         self.chnanelid = channelid
         self.onoff = onoff
@@ -168,7 +169,8 @@ async def offchannel(interaction: Interaction):
     view = ui.View()
     guild = bot.get_guild(guild_id)
     for voicechannel in guild.voice_channels:
-        view.add_item(onoffbutton(voicechannel.name, voicechannel.id, channelonoff[voicechannel.id]))
+        view.add_item(onoffbutton(voicechannel.name,
+                      voicechannel.id, channelonoff[voicechannel.id]))
     view.add_item(chancel_button())
     await interaction.response.send_message(content="オンオフを切り替えられます。(青がオン)", view=view)
 
@@ -178,7 +180,8 @@ async def offlist(interaction: Interaction):
     embed = discord.Embed(title="チャンネルのオンオフです", color=0x00E5FF)
     guild = bot.get_guild(guild_id)
     for voicechannel in guild.voice_channels:
-        embed.add_field(name=voicechannel.name, value=":o:" if channelonoff[voicechannel.id] else ":x:", inline=False)
+        embed.add_field(name=voicechannel.name,
+                        value=":o:" if channelonoff[voicechannel.id] else ":x:", inline=False)
     await interaction.response.send_message(embed=embed)
 
 
