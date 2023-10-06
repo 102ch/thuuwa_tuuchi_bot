@@ -170,11 +170,8 @@ async def offchannel(interaction: Interaction):
     view = ui.View()
     guild = bot.get_guild(guild_id)
     for voicechannel in guild.voice_channels:
-        view.add_item(onoffbutton(voicechannel.name,
-                      voicechannel.id, channelonoff[voicechannel.id]))
+        view.add_item(onoffbutton(voicechannel.name, voicechannel.id, channelonoff[voicechannel.id]))
     view.add_item(chancel_button())
-
-    # ephemeral = True
     await interaction.response.send_message(content="オンオフを切り替えられます。(青がオン)", view=view)
 
 
@@ -183,8 +180,7 @@ async def offlist(interaction: Interaction):
     embed = discord.Embed(title="チャンネルのオンオフです", color=0x00E5FF)
     guild = bot.get_guild(guild_id)
     for voicechannel in guild.voice_channels:
-        embed.add_field(name=voicechannel.name,
-                        value=":o:" if channelonoff[voicechannel.id] else ":x:", inline=False)
+        embed.add_field(name=voicechannel.name, value=":o:" if channelonoff[voicechannel.id] else ":x:", inline=False)
     await interaction.response.send_message(embed=embed)
 
 
