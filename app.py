@@ -19,6 +19,7 @@ channel_id = initial_channel
 notitext = initial_text
 changeflag = initial_flag
 e_time = {}
+channelonoff = {}
 bot = commands.Bot(
     command_prefix="/",
     intents=discord.Intents.all(),
