@@ -1,7 +1,4 @@
 import os
-import discord
-from discord.ext import commands
-from bot_config import *
 
 INITIAL_CHANNEL = int(os.environ['DISCORD_CHANNEL_ID'])
 INITIAL_TEXT = "@everyone"
