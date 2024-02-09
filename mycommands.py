@@ -46,19 +46,19 @@ class CallNotification(app_commands.Group):
 
         async def callback(self, interaction: discord.Interaction):
             global channel_id, changeflag, notitext
-            if self.initial == initial_channel:
-                channel_id = initial_channel
-                resetmessage = self.client.get_channel(initial_channel).name
-            elif self.initial == initial_flag:
-                changeflag = initial_flag
+            if self.initial == INITIAL_CHANNEL:
+                channel_id = INITIAL_CHANNEL
+                resetmessage = self.client.get_channel(INITIAL_CHANNEL).name
+            elif self.initial == INITIAL_FLAG:
+                changeflag = INITIAL_FLAG
                 resetmessage = "終了時にも通知を行う"
-            elif self.initial == initial_text:
-                notitext = initial_text
-                resetmessage = initial_text
+            elif self.initial == INITIAL_TEXT:
+                notitext = INITIAL_TEXT
+                resetmessage = INITIAL_TEXT
             elif self.initial == "allreset":
-                channel_id = initial_channel
-                changeflag = initial_flag
-                notitext = initial_text
+                channel_id = INITIAL_CHANNEL
+                changeflag = INITIAL_FLAG
+                notitext = INITIAL_TEXT
                 resetmessage = self.initial
                 await interaction.response.edit_message(content=f'{resetmessage}', view=None)
                 return
@@ -67,9 +67,9 @@ class CallNotification(app_commands.Group):
     @app_commands.command(name="reset", description="三つの変更可能項目についてリセットできます")
     async def reset(self, interaction: Interaction):
         view = ui.View()
-        view.add_item(self.resetbutton("送信チャンネル", initial_channel), self.client)
-        view.add_item(self.resetbutton("終了時通知", initial_flag), self.client)
-        view.add_item(self.resetbutton("通知時テキスト", initial_text), self.client)
+        view.add_item(self.resetbutton("送信チャンネル", INITIAL_CHANNEL), self.client)
+        view.add_item(self.resetbutton("終了時通知", INITIAL_FLAG), self.client)
+        view.add_item(self.resetbutton("通知時テキスト", INITIAL_TEXT), self.client)
         view.add_item(self.resetbutton("全て", "allreset"), self.client)
         await interaction.response.send_message(content="リセットする項目について選んでください", view=view)
 
