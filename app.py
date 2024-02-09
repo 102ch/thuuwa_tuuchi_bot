@@ -1,28 +1,10 @@
 import discord
-from discord.ext import commands
-from discord import Embed, Interaction, ui
-import asyncio
 import datetime
 import pytz
-import os
-from modules.commands import CallNotification
+from mycommands import CallNotification
 from bot_config import *
+from params import *
 from discord.app_commands import CommandTree
-
-initial_channel = int(os.environ['DISCORD_CHANNEL_ID'])
-initial_text = "@everyone"
-initial_flag = True
-
-channel_id = initial_channel
-notitext = initial_text
-changeflag = initial_flag
-e_time = {}
-channelonoff = {}
-bot = commands.Bot(
-    command_prefix="/",
-    intents=discord.Intents.all(),
-    application_id=APPLICATION_ID
-)
 
 class MyClient(discord.Client):
     def __init__(self, *, intents: discord.Intents,) -> None:
