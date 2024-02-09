@@ -10,7 +10,7 @@ class MyClient(discord.Client):
     def __init__(self, *, intents: discord.Intents,) -> None:
         super().__init__(intents=intents)
         self.tree = CommandTree(self)
-        self.tree.add_command(CallNotification('callnoification', client=self))
+        self.tree.add_command(CallNotification('callnotion', client=self))
     
     async def on_ready(self):
         guild = self.get_guild(GUILD_ID)
