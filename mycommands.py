@@ -3,8 +3,9 @@ import discord
 from params import *
 
 class CallNotification(app_commands.Group):
-    def __init__(self, name: str):
+    def __init__(self, name: str, client: discord.Client):
         super().__init__(name=name)
+        self.client = client
     
     @app_commands.command(name="set", description="通知お知らせ君がこのチャンネルに降臨するよ！")
     async def set(self, interaction: Interaction):
@@ -37,16 +38,17 @@ class CallNotification(app_commands.Group):
         await interaction.response.send_message(content=f"「{notitext}」に変更します!")
 
     class resetbutton(ui.Button):
-        def __init__(self, label, initial):
+        def __init__(self, label, initial, client):
             super().__init__(label=label)
             self.label = label
             self.initial = initial
+            self.client = client
 
         async def callback(self, interaction: discord.Interaction):
             global channel_id, changeflag, notitext
             if self.initial == initial_channel:
                 channel_id = initial_channel
-                resetmessage = bot.get_channel(initial_channel).name
+                resetmessage = self.client.get_channel(initial_channel).name
             elif self.initial == initial_flag:
                 changeflag = initial_flag
                 resetmessage = "終了時にも通知を行う"
@@ -65,10 +67,10 @@ class CallNotification(app_commands.Group):
     @app_commands.command(name="reset", description="三つの変更可能項目についてリセットできます")
     async def reset(self, interaction: Interaction):
         view = ui.View()
-        view.add_item(self.resetbutton("送信チャンネル", initial_channel))
-        view.add_item(self.resetbutton("終了時通知", initial_flag))
-        view.add_item(self.resetbutton("通知時テキスト", initial_text))
-        view.add_item(self.resetbutton("全て", "allreset"))
+        view.add_item(self.resetbutton("送信チャンネル", initial_channel), self.client)
+        view.add_item(self.resetbutton("終了時通知", initial_flag), self.client)
+        view.add_item(self.resetbutton("通知時テキスト", initial_text), self.client)
+        view.add_item(self.resetbutton("全て", "allreset"), self.client)
         await interaction.response.send_message(content="リセットする項目について選んでください", view=view)
 
 
@@ -97,7 +99,7 @@ class CallNotification(app_commands.Group):
     @app_commands.command(name="offchannel", description="オフにするチャンネルを選べます")
     async def offchannel(self, interaction: Interaction):
         view = ui.View()
-        guild = bot.get_guild(GUILD_ID)
+        guild = self.client.get_guild(GUILD_ID)
         for voicechannel in guild.voice_channels:
             view.add_item(self.onoffbutton(voicechannel.name,
                         voicechannel.id, channelonoff[voicechannel.id]))
@@ -108,7 +110,7 @@ class CallNotification(app_commands.Group):
     @app_commands.command(name="offlist", description="オフにするチャンネルを選べます")
     async def offlist(self, interaction: Interaction):
         embed = discord.Embed(title="チャンネルのオンオフです", color=0x00E5FF)
-        guild = bot.get_guild(GUILD_ID)
+        guild = self.client.get_guild(GUILD_ID)
         for voicechannel in guild.voice_channels:
             embed.add_field(name=voicechannel.name,
                             value=":o:" if channelonoff[voicechannel.id] else ":x:", inline=False)
