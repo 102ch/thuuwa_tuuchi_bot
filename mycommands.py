@@ -1,6 +1,6 @@
 from discord import app_commands, Interaction, ui
 import discord
-from app import initial_channel, initial_flag, initial_text, guild_id, bot
+from params import *
 
 class CallNotification(app_commands.Group):
     def __init__(self, name: str):
@@ -97,7 +97,7 @@ class CallNotification(app_commands.Group):
     @app_commands.command(name="offchannel", description="オフにするチャンネルを選べます")
     async def offchannel(self, interaction: Interaction):
         view = ui.View()
-        guild = bot.get_guild(guild_id)
+        guild = bot.get_guild(GUILD_ID)
         for voicechannel in guild.voice_channels:
             view.add_item(self.onoffbutton(voicechannel.name,
                         voicechannel.id, channelonoff[voicechannel.id]))
@@ -108,7 +108,7 @@ class CallNotification(app_commands.Group):
     @app_commands.command(name="offlist", description="オフにするチャンネルを選べます")
     async def offlist(self, interaction: Interaction):
         embed = discord.Embed(title="チャンネルのオンオフです", color=0x00E5FF)
-        guild = bot.get_guild(guild_id)
+        guild = bot.get_guild(GUILD_ID)
         for voicechannel in guild.voice_channels:
             embed.add_field(name=voicechannel.name,
                             value=":o:" if channelonoff[voicechannel.id] else ":x:", inline=False)
