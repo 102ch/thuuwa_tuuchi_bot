@@ -3,12 +3,12 @@ import discord
 from discord.ext import commands
 from bot_config import *
 
-initial_channel = int(os.environ['DISCORD_CHANNEL_ID'])
-initial_text = "@everyone"
-initial_flag = True
+INITIAL_CHANNEL = int(os.environ['DISCORD_CHANNEL_ID'])
+INITIAL_TEXT = "@everyone"
+INITIAL_FLAG = True
 
-channel_id = initial_channel
-notitext = initial_text
-changeflag = initial_flag
+channel_id = INITIAL_CHANNEL
+notitext = INITIAL_TEXT
+changeflag = INITIAL_FLAG
 e_time = {}
 channelonoff = {}
