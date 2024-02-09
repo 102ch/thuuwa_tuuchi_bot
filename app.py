@@ -6,10 +6,8 @@ import datetime
 import pytz
 import os
 from modules.commands import CallNotification
-
-TOKEN = os.environ['DISCORD_BOT_TOKEN']
-application_id = int(os.environ['DISCORD_APPLICATION_ID'])
-guild_id = int(os.environ['DISCORD_GUILD_ID'])
+from bot_config import *
+from discord.app_commands import CommandTree
 
 initial_channel = int(os.environ['DISCORD_CHANNEL_ID'])
 initial_text = "@everyone"
@@ -23,12 +21,9 @@ channelonoff = {}
 bot = commands.Bot(
     command_prefix="/",
     intents=discord.Intents.all(),
-    application_id=application_id
+    application_id=APPLICATION_ID
 )
 tree = bot.tree
-
-from discord.app_commands import CommandTree
-
 class MyClient(discord.Client):
     def __init__(self, *, intents: discord.Intents,) -> None:
         super().__init__(intents=intents)
@@ -37,7 +32,7 @@ class MyClient(discord.Client):
     
     async def on_ready():
         await tree.sync()
-        guild = bot.get_guild(guild_id)
+        guild = bot.get_guild(GUILD_ID)
         for voicechannel in guild.voice_channels:
             channelonoff[voicechannel.id] = True
         print('connected')
@@ -76,7 +71,7 @@ class MyClient(discord.Client):
 
 def main():
     # start the client
-    client = MyClient(intents=discord.Intents.all())
+    client = MyClient(intents=INTENTS)
     client.run(TOKEN)
 
 if __name__ == "__main__":
