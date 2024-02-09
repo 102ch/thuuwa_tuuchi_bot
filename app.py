@@ -23,15 +23,15 @@ bot = commands.Bot(
     intents=discord.Intents.all(),
     application_id=APPLICATION_ID
 )
-tree = bot.tree
+
 class MyClient(discord.Client):
     def __init__(self, *, intents: discord.Intents,) -> None:
         super().__init__(intents=intents)
-        self.tree = CommandTree(self)
+        self.tree = bot.tree
         self.tree.add_command(CallNotification('callnoification'))
     
-    async def on_ready():
-        await tree.sync()
+    async def on_ready(self):
+        await self.tree.sync()
         guild = bot.get_guild(GUILD_ID)
         for voicechannel in guild.voice_channels:
             channelonoff[voicechannel.id] = True
