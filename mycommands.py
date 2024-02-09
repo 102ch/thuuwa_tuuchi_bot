@@ -1,6 +1,7 @@
 import discord
 from discord import app_commands, Interaction, ui
 from params import *
+from bot_config import *
 
 class CallNotification(app_commands.Group):
     def __init__(self, name: str, client: discord.Client):
