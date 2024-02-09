@@ -9,7 +9,7 @@ from discord.app_commands import CommandTree
 class MyClient(discord.Client):
     def __init__(self, *, intents: discord.Intents,) -> None:
         super().__init__(intents=intents)
-        self.tree = bot.tree
+        self.tree = CommandTree(self)
         self.tree.add_command(CallNotification('callnoification'))
     
     async def on_ready(self):
@@ -21,9 +21,10 @@ class MyClient(discord.Client):
     async def setup_hook(self) -> None:
         await self.tree.sync()
 
+    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
         if before.channel and len(before.channel.members) == 0 and changeflag and channelonoff[before.channel.id]:
             if not member.status == discord.Status.idle:
-                channel = bot.get_channel(channel_id)
+                channel = self.get_channel(channel_id)
                 embed = discord.Embed(title="通話終了", color=0x6a5acd)
                 embed.add_field(
                     name="チャンネル", value=before.channel.name, inline=False)
@@ -39,7 +40,7 @@ class MyClient(discord.Client):
                 print(channel_id)
                 try:
                     print(channel_id)
-                    channel = bot.get_channel(channel_id)
+                    channel = self.get_channel(channel_id)
                     embed = discord.Embed(title="通話開始", color=0xffb6c1)
                     embed.add_field(
                         name="チャンネル", value=after.channel.name, inline=False)
