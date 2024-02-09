@@ -13,13 +13,14 @@ class MyClient(discord.Client):
         self.tree.add_command(CallNotification('callnoification'))
     
     async def on_ready(self):
-        await self.tree.sync()
-        guild = bot.get_guild(GUILD_ID)
+        guild = self.get_guild(GUILD_ID)
         for voicechannel in guild.voice_channels:
             channelonoff[voicechannel.id] = True
         print('connected')
+    
+    async def setup_hook(self) -> None:
+        await self.tree.sync()
 
-    async def on_voice_state_update(member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
         if before.channel and len(before.channel.members) == 0 and changeflag and channelonoff[before.channel.id]:
             if not member.status == discord.Status.idle:
                 channel = bot.get_channel(channel_id)
