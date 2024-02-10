@@ -22,7 +22,7 @@ class MyClient(discord.Client):
         await self.tree.sync()
 
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-        if before.channel and len(before.channel.members) == 0 and changeflag and channelonoff[before.channel.id]:
+        if before.channel and len(before.channel.members) == 0 and is_call_end_notification_enabled and channelonoff[before.channel.id]:
             if not member.status == discord.Status.idle:
                 channel = self.get_channel(channel_id)
                 embed = discord.Embed(title="通話終了", color=0x6a5acd)
