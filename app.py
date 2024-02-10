@@ -32,7 +32,12 @@ class MyClient(discord.Client):
                     pytz.timezone('Asia/Tokyo'))-e_time[before.channel.id], inline=False)
                 e_time[before.channel.id] = 0
                 await channel.send(embed=embed)
-        if after.channel and len(after.channel.members) == 1 and channelonoff[after.channel.id]:
+                return
+        # 通話開始通知
+        is_exist_channel_before = before.channel == None
+        member_count_after = len(after.channel.members)
+        is_start_call = is_exist_channel_before and member_count_after >= 1
+        if is_start_call and channelonoff[after.channel.id]:
             print("voice state update2")
             e_time[after.channel.id] = datetime.datetime.now(
                 pytz.timezone('Asia/Tokyo'))
