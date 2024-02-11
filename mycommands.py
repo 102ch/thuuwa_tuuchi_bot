@@ -14,22 +14,22 @@ class CallNotification(app_commands.Group):
         channel_id = interaction.channel.id
         await interaction.response.send_message("変更しました！")
 
-    class mode(ui.Button):
+    class CallEndNotificationChangeButton(ui.Button):
         def __init__(self, label, change):
             super().__init__(label=label)
             self.label = label
             self.change = change
 
         async def callback(self, interaction: discord.Interaction):
-            global changeflag
-            changeflag = self.change
+            global is_call_end_notification_enabled
+            is_call_end_notification_enabled = self.change
             await interaction.response.edit_message(content=f'{self.label}に変更します', view=None)
 
     @app_commands.command(name="changenotificationmode", description="終了時に通知をするかを変えます")
     async def changenotificationmode(self, interaction: Interaction):
         view = ui.View()
-        view.add_item(self.mode("終了時にも通知をする", True))
-        view.add_item(self.mode("終了時には通知をしない", False))
+        view.add_item(self.CallEndNotificationChangeButton("終了時にも通知をする",   True))
+        view.add_item(self.CallEndNotificationChangeButton("終了時には通知をしない", False))
         await interaction.response.send_message("選択してください", view=view)
 
     @app_commands.command(name="textchange", description="通知時のテキストを変更します")
@@ -46,19 +46,19 @@ class CallNotification(app_commands.Group):
             self.client = client
 
         async def callback(self, interaction: discord.Interaction):
-            global channel_id, changeflag, notitext
+            global channel_id, is_call_end_notification_enabled, notitext
             if self.initial == INITIAL_CHANNEL:
                 channel_id = INITIAL_CHANNEL
                 resetmessage = self.client.get_channel(INITIAL_CHANNEL).name
             elif self.initial == INITIAL_FLAG:
-                changeflag = INITIAL_FLAG
+                is_call_end_notification_enabled = INITIAL_FLAG
                 resetmessage = "終了時にも通知を行う"
             elif self.initial == INITIAL_TEXT:
                 notitext = INITIAL_TEXT
                 resetmessage = INITIAL_TEXT
             elif self.initial == "allreset":
                 channel_id = INITIAL_CHANNEL
-                changeflag = INITIAL_FLAG
+                is_call_end_notification_enabled = INITIAL_FLAG
                 notitext = INITIAL_TEXT
                 resetmessage = self.initial
                 await interaction.response.edit_message(content=f'{resetmessage}', view=None)
