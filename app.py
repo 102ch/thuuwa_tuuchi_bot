@@ -39,23 +39,22 @@ class MyClient(discord.Client):
         
         if self.is_call_start(before, after, member):
             print("voice state update2")
-            e_time[after.channel.id] = datetime.datetime.now(
-                pytz.timezone('Asia/Tokyo'))
-            if not member.status == discord.Status.idle:
+            current_time = datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
+            e_time[after.channel.id] = current_time
+            if member.status == discord.Status.idle: return
+            print(channel_id)
+            try:
                 print(channel_id)
-                try:
-                    print(channel_id)
-                    channel = self.get_channel(channel_id)
-                    embed = discord.Embed(title="通話開始", color=0xffb6c1)
-                    embed.add_field(name="チャンネル", value=after.channel.name, inline=False)
-                    embed.add_field(name="始めた人", value=member.display_name, inline=False)
-                    current_time = datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
-                    #print(current_time, type(current_time))
-                    embed.add_field(name="始めた時刻", value=current_time, inline=False)
-                    embed.set_thumbnail(url=member.display_avatar.url)
-                    await channel.send(content=params.notitext, embed=embed)
-                except Exception as e:
-                    print(e)
+                channel = self.get_channel(channel_id)
+                embed = discord.Embed(title="通話開始", color=0xffb6c1)
+                embed.add_field(name="チャンネル", value=after.channel.name, inline=False)
+                embed.add_field(name="始めた人", value=member.display_name, inline=False)
+                print(current_time, type(current_time))
+                embed.add_field(name="始めた時刻", value=current_time, inline=False)
+                embed.set_thumbnail(url=member.display_avatar.url)
+                await channel.send(content=params.notitext, embed=embed)
+            except Exception as e:
+                print(e)
 
     async def end_call(self, before, after, member):
         if before.channel == None: return
@@ -68,7 +67,7 @@ class MyClient(discord.Client):
             embed.add_field(name="チャンネル", value=before.channel.name, inline=False)
             current_time = datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
             elapsed_time = current_time - e_time[before.channel.id]
-            #print(elapsed_time, type(elapsed_time))
+            print(elapsed_time, type(elapsed_time))
             embed.add_field(name="通話時間", value=elapsed_time, inline=False)
             e_time[before.channel.id] = 0
             await channel.send(embed=embed)
