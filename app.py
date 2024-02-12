@@ -49,7 +49,7 @@ class MyClient(discord.Client):
                 embed.add_field(name="始めた人", value=member.display_name, inline=False)
                 current_time = datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
                 e_time[after.channel.id] = current_time
-                current_time_str = current_time.strftime('%x %X')
+                current_time_str = current_time.strftime('%Y-%m-%d %X')
                 embed.add_field(name="始めた時刻", value=current_time_str, inline=False)
                 embed.set_thumbnail(url=member.display_avatar.url)
                 await channel.send(content=params.notitext, embed=embed)
