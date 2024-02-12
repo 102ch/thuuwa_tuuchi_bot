@@ -33,6 +33,9 @@ class MyClient(discord.Client):
         return is_start_call
     
     async def start_call(self, before, after, member):
+        if after.channel == None: return
+        if channelonoff[after.channel.id] == False: return
+        
         if self.is_call_start(before, after, member):
             print("voice state update2")
             e_time[after.channel.id] = datetime.datetime.now(
@@ -43,42 +46,34 @@ class MyClient(discord.Client):
                     print(channel_id)
                     channel = self.get_channel(channel_id)
                     embed = discord.Embed(title="通話開始", color=0xffb6c1)
-                    embed.add_field(
-                        name="チャンネル", value=after.channel.name, inline=False)
-                    embed.add_field(
-                        name="始めた人", value=member.display_name, inline=False)
-                    embed.add_field(name="始めた時刻", value=datetime.datetime.now(
-                        pytz.timezone('Asia/Tokyo')), inline=False)
+                    embed.add_field(name="チャンネル", value=after.channel.name, inline=False)
+                    embed.add_field(name="始めた人", value=member.display_name, inline=False)
+                    embed.add_field(name="始めた時刻", value=datetime.datetime.now(pytz.timezone('Asia/Tokyo')), inline=False)
                     embed.set_thumbnail(url=member.display_avatar.url)
                     await channel.send(content=notitext, embed=embed)
                 except Exception as e:
                     print(e)
 
     async def end_call(self, before, after, member):
-        if before.channel != None and not channelonoff[before.channel.id]: return
-        if after.channel  != None and not channelonoff[after.channel.id ]: return
-
+        if before.channel == None: return
+        if channelonoff[before.channel.id] == False: return
+        
         if before.channel and len(before.channel.members) == 0 and is_call_end_notification_enabled:
             if member.status == discord.Status.idle: return
             channel = self.get_channel(channel_id)
             embed = discord.Embed(title="通話終了", color=0x6a5acd)
-            embed.add_field(
-                name="チャンネル", value=before.channel.name, inline=False)
-            embed.add_field(name="通話時間", value=datetime.datetime.now(
-                pytz.timezone('Asia/Tokyo'))-e_time[before.channel.id], inline=False)
+            embed.add_field(name="チャンネル", value=before.channel.name, inline=False)
+            embed.add_field(name="通話時間", value=datetime.datetime.now(pytz.timezone('Asia/Tokyo'))-e_time[before.channel.id], inline=False)
             e_time[before.channel.id] = 0
             await channel.send(embed=embed)
             return
         
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-        if before.channel != None and not channelonoff[before.channel.id]: return
-        if after.channel  != None and not channelonoff[after.channel.id ]: return
-
+        # 通話終了通知
+        await self.end_call(before, after, member)
         # 通話開始通知
         await self.start_call(before, after, member)
         
-        # 通話終了通知
-        await self.end_call(before, after, member)
 
 def main():
     # start the client
