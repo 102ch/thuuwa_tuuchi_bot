@@ -68,10 +68,10 @@ class CallNotification(app_commands.Group):
     @app_commands.command(name="reset", description="三つの変更可能項目についてリセットできます")
     async def reset(self, interaction: Interaction):
         view = ui.View()
-        view.add_item(self.resetbutton("送信チャンネル", INITIAL_CHANNEL), self.client)
-        view.add_item(self.resetbutton("終了時通知", INITIAL_FLAG), self.client)
-        view.add_item(self.resetbutton("通知時テキスト", INITIAL_TEXT), self.client)
-        view.add_item(self.resetbutton("全て", "allreset"), self.client)
+        view.add_item(self.resetbutton("送信チャンネル", INITIAL_CHANNEL, self.client))
+        view.add_item(self.resetbutton("終了時通知", INITIAL_FLAG, self.client))
+        view.add_item(self.resetbutton("通知時テキスト", INITIAL_TEXT, self.client))
+        view.add_item(self.resetbutton("全て", "allreset", self.client))
         await interaction.response.send_message(content="リセットする項目について選んでください", view=view)
 
 
