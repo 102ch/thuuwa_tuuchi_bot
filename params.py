@@ -6,6 +6,6 @@ INITIAL_FLAG = True
 
 channel_id = INITIAL_CHANNEL
 notitext = INITIAL_TEXT
-changeflag = INITIAL_FLAG
+is_call_end_notification_enabled = INITIAL_FLAG
 e_time = {}
 channelonoff = {}
