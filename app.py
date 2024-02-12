@@ -5,6 +5,7 @@ import pytz
 from mycommands import CallNotification
 from bot_config import *
 from params import *
+import params
 
 class MyClient(discord.Client):
     def __init__(self, *, intents: discord.Intents,) -> None:
@@ -48,9 +49,11 @@ class MyClient(discord.Client):
                     embed = discord.Embed(title="通話開始", color=0xffb6c1)
                     embed.add_field(name="チャンネル", value=after.channel.name, inline=False)
                     embed.add_field(name="始めた人", value=member.display_name, inline=False)
-                    embed.add_field(name="始めた時刻", value=datetime.datetime.now(pytz.timezone('Asia/Tokyo')), inline=False)
+                    current_time = datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
+                    #print(current_time, type(current_time))
+                    embed.add_field(name="始めた時刻", value=current_time, inline=False)
                     embed.set_thumbnail(url=member.display_avatar.url)
-                    await channel.send(content=notitext, embed=embed)
+                    await channel.send(content=params.notitext, embed=embed)
                 except Exception as e:
                     print(e)
 
@@ -63,7 +66,10 @@ class MyClient(discord.Client):
             channel = self.get_channel(channel_id)
             embed = discord.Embed(title="通話終了", color=0x6a5acd)
             embed.add_field(name="チャンネル", value=before.channel.name, inline=False)
-            embed.add_field(name="通話時間", value=datetime.datetime.now(pytz.timezone('Asia/Tokyo'))-e_time[before.channel.id], inline=False)
+            current_time = datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
+            elapsed_time = current_time - e_time[before.channel.id]
+            #print(elapsed_time, type(elapsed_time))
+            embed.add_field(name="通話時間", value=elapsed_time, inline=False)
             e_time[before.channel.id] = 0
             await channel.send(embed=embed)
             return

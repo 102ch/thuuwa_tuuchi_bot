@@ -2,7 +2,7 @@ import discord
 from discord import app_commands, Interaction, ui
 from params import *
 from bot_config import *
-
+import params
 class CallNotification(app_commands.Group):
     def __init__(self, name: str, client: discord.Client):
         super().__init__(name=name)
@@ -34,9 +34,8 @@ class CallNotification(app_commands.Group):
 
     @app_commands.command(name="textchange", description="通知時のテキストを変更します")
     async def textchange(self, interaction: Interaction, newtext: str):
-        global notitext
-        notitext = newtext
-        await interaction.response.send_message(content=f"「{notitext}」に変更します!")
+        params.notitext = newtext
+        await interaction.response.send_message(content=f"「{params.notitext}」に変更します!")
 
     class resetbutton(ui.Button):
         def __init__(self, label, initial, client):
