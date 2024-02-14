@@ -115,3 +115,7 @@ class CallNotification(app_commands.Group):
             embed.add_field(name=voicechannel.name,
                             value=":o:" if channelonoff[voicechannel.id] else ":x:", inline=False)
         await interaction.response.send_message(embed=embed)
+    
+    @app_commands.command(name="getnotiontext", description="通知時のテキストの現在の設定値の確認用です。")
+    async def getnotiontext(self, interaction: Interaction):
+        await interaction.response.send_message(content=f"現在の通知時テキストは「{params.notitext}」です。", silent=True)
