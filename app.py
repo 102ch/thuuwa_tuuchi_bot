@@ -86,7 +86,7 @@ class MyClient(discord.Client):
         if not before.channel: return
 
         # 通知対象のチャンネルではないなら何もしない
-        if not channelonoff[before.channel.id]: return
+        if not channelonoff.get(before.channel.id, False): return
         
         # 変化前のチャンネルの現在のメンバー数が0なら通話終了
         if len(before.channel.members) == 0:
