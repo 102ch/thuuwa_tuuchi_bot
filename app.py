@@ -76,11 +76,22 @@ class MyClient(discord.Client):
         return elapsed_time_str
     
     async def end_call(self, before, after, member):
-        if before.channel == None: return
-        if channelonoff[before.channel.id] == False: return
+        # この関数はボイスチャンネルの状態が変化したときに呼び出される
+        # beforeは変化前の状態、afterは変化後の状態
+
+        # 通話終了通知をしない設定になっているなら何もしない
+        if not is_call_end_notification_enabled: return
+
+        # 変化前のチャンネルが存在しないなら通話終了ではない
+        if not before.channel: return
+
+        # 通知対象のチャンネルではないなら何もしない
+        if not channelonoff[before.channel.id]: return
         
-        if before.channel and len(before.channel.members) == 0 and is_call_end_notification_enabled:
-            if member.status == discord.Status.idle: return
+        # 変化前のチャンネルの現在のメンバー数が0なら通話終了
+        if len(before.channel.members) == 0:
+            if member.status == discord.Status.idle: return # <-- ?
+            
             channel = self.get_channel(channel_id)
             embed = discord.Embed(title="通話終了", color=0x6a5acd)
             embed.add_field(name="チャンネル", value=before.channel.name, inline=False)
