@@ -90,8 +90,6 @@ class MyClient(discord.Client):
         
         # 変化前のチャンネルの現在のメンバー数が0なら通話終了
         if len(before.channel.members) == 0:
-            if member.status == discord.Status.idle: return # <-- ?
-            
             channel = self.get_channel(channel_id)
             embed = discord.Embed(title="通話終了", color=0x6a5acd)
             embed.add_field(name="チャンネル", value=before.channel.name, inline=False)
