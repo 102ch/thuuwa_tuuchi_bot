@@ -35,22 +35,27 @@ class MyClient(discord.Client):
     async def start_call(self, before, after, member):
         # 変化後のチャンネルが存在しないなら通話開始ではない
         if not after.channel:
+            print("after channel is None")
             return
 
         # 通知対象のチャンネルではないなら何もしない
         if not is_target_channel.get(after.channel.id, False):
+            print("not target channel")
             return
 
         # チャンネルを移動していないなら何もしない
         if before.channel == after.channel:
+            print("not moved")
             return
 
         # チャンネルに人がいないなら通話開始ではない
         if len(after.channel.members) == 0:
+            print("no members")
             return
 
         # チャンネルの人数が2人以上なら通話開始ではない
         if len(after.channel.members) > 1:
+            print("more than 2 members")
             return
 
         print("voice state update2")
@@ -95,14 +100,17 @@ class MyClient(discord.Client):
 
         # 通話終了通知をしない設定になっているなら何もしない
         if not is_call_end_notification_enabled:
+            print("通話終了通知をしない設定になっています")
             return
 
         # 変化前のチャンネルが存在しないなら通話終了ではない
         if not before.channel:
+            print("before channel is None")
             return
 
         # 通知対象のチャンネルではないなら何もしない
         if not is_target_channel.get(before.channel.id, False):
+            print("not target channel")
             return
 
         # 変化前のチャンネルの現在のメンバー数が0なら通話終了
