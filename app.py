@@ -23,12 +23,20 @@ class MyClient(discord.Client):
     async def on_ready(self):
         guild = self.get_guild(GUILD_ID)
         print("connected")
-        if len(db_utils.load_is_target_channels()) == 0:
-            for channel in guild.voice_channels:
-                print(channel.name)
-                print(channel.id)
+        # データベースから現在のターゲットチャンネル設定を読み込む
+        current_channels = db_utils.load_is_target_channels()
+
+        # すべてのボイスチャンネルをチェック
+        for channel in guild.voice_channels:
+            print(channel.name)
+            print(channel.id)
+            # チャンネルがデータベースに存在しない場合は、Trueとして追加
+            if channel.id not in current_channels:
                 is_target_channel[channel.id] = True
                 db_utils.save_is_target_channel(channel.id, True)
+            else:
+                # 既存の設定を反映
+                is_target_channel[channel.id] = current_channels[channel.id]
 
     async def setup_hook(self) -> None:
         await self.tree.sync()
