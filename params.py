@@ -8,4 +8,4 @@ channel_id = INITIAL_CHANNEL
 notitext = INITIAL_TEXT
 is_call_end_notification_enabled = INITIAL_FLAG
 e_time = {}
-channelonoff = {}
+is_target_channel = {}
