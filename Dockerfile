@@ -6,6 +6,8 @@ WORKDIR /app
 
 COPY . /app
 
+RUN apt install build-essential
+
 RUN pip install --upgrade pip
 RUN pip install --upgrade setuptools
 RUN pip install -r requirements.txt
@@ -18,5 +20,5 @@ WORKDIR /app
 
 COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages/
 COPY --from=builder /app /app/
-RUN apt install build-essential
+
 CMD ["python3","app.py"]
