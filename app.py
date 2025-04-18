@@ -6,6 +6,7 @@ from mycommands import CallNotification
 from bot_config import *
 from params import *
 import params
+from db_utils import init_db
 
 class MyClient(discord.Client):
     def __init__(self, *, intents: discord.Intents,) -> None:
@@ -15,8 +16,6 @@ class MyClient(discord.Client):
     
     async def on_ready(self):
         guild = self.get_guild(GUILD_ID)
-        for voicechannel in guild.voice_channels:
-            is_target_channel[voicechannel.id] = True
         print('connected')
     
     async def setup_hook(self) -> None:
