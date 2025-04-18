@@ -6,6 +6,8 @@ WORKDIR /app
 
 COPY . /app
 
+RUN apt update
+RUN apt upgrade
 RUN apt install -y build-essential gcc
 
 RUN pip install --upgrade pip
