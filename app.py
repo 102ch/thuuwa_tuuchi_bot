@@ -13,6 +13,7 @@ class MyClient(discord.Client):
         super().__init__(intents=intents)
         self.tree = CommandTree(self)
         self.tree.add_command(CallNotification('callnotion', client=self))
+        init_db()
     
     async def on_ready(self):
         guild = self.get_guild(GUILD_ID)
