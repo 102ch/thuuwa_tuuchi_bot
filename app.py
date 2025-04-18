@@ -122,6 +122,7 @@ class MyClient(discord.Client):
         before: discord.VoiceState,
         after: discord.VoiceState,
     ):
+        print("voice state update")
         # 通話終了通知
         await self.end_call(before, after, member)
         # 通話開始通知
