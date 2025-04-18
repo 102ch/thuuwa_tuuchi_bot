@@ -6,9 +6,6 @@ WORKDIR /app
 
 COPY . /app
 
-RUN apt update
-RUN apt install -y build-essential gcc
-
 RUN pip install --upgrade pip
 RUN pip install --upgrade setuptools
 RUN pip install -r requirements.txt
