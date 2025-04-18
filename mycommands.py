@@ -3,6 +3,8 @@ from discord import app_commands, Interaction, ui
 from params import *
 from bot_config import *
 import params
+from db_utils import save_notitext, save_is_target_channel
+
 class CallNotification(app_commands.Group):
     def __init__(self, name: str, client: discord.Client):
         super().__init__(name=name)
@@ -35,6 +37,7 @@ class CallNotification(app_commands.Group):
     @app_commands.command(name="textchange", description="通知時のテキストを変更します")
     async def textchange(self, interaction: Interaction, newtext: str):
         params.notitext = newtext
+        save_notitext(newtext)  # データベースに保存
         await interaction.response.send_message(content=f"「{params.notitext}」に変更します!")
 
     class resetbutton(ui.Button):
@@ -83,9 +86,10 @@ class CallNotification(app_commands.Group):
             self.onoff = onoff
 
         async def callback(self, interaction: discord.Interaction):
-            global channelonoff
-            channelonoff[self.chnanelid] = False if channelonoff[self.chnanelid] else True
-            await interaction.response.edit_message(content=f'{self.channelname}を{"オン" if channelonoff[self.chnanelid] else "オフ"}に切り替えました', view=None)
+            global is_target_channel
+            is_target_channel[self.chnanelid] = not is_target_channel[self.chnanelid]
+            save_is_target_channel(self.chnanelid, is_target_channel[self.chnanelid])
+            await interaction.response.edit_message(content=f'{self.channelname}を{"オン" if is_target_channel[self.chnanelid] else "オフ"}に切り替えました', view=None)
 
 
     class chancel_button(ui.Button):
@@ -102,7 +106,7 @@ class CallNotification(app_commands.Group):
         guild = self.client.get_guild(GUILD_ID)
         for voicechannel in guild.voice_channels:
             view.add_item(self.onoffbutton(voicechannel.name,
-                        voicechannel.id, channelonoff[voicechannel.id]))
+                        voicechannel.id, is_target_channel[voicechannel.id]))
         view.add_item(self.chancel_button())
         await interaction.response.send_message(content="オンオフを切り替えられます。(青がオン)", view=view)
 
@@ -113,7 +117,7 @@ class CallNotification(app_commands.Group):
         guild = self.client.get_guild(GUILD_ID)
         for voicechannel in guild.voice_channels:
             embed.add_field(name=voicechannel.name,
-                            value=":o:" if channelonoff[voicechannel.id] else ":x:", inline=False)
+                            value=":o:" if is_target_channel[voicechannel.id] else ":x:", inline=False)
         await interaction.response.send_message(embed=embed)
     
     @app_commands.command(name="getnotiontext", description="通知時のテキストの現在の設定値の確認用です。")

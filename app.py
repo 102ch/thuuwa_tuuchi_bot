@@ -6,6 +6,7 @@ from mycommands import CallNotification
 from bot_config import *
 from params import *
 import params
+from db_utils import init_db
 
 class MyClient(discord.Client):
     def __init__(self, *, intents: discord.Intents,) -> None:
@@ -15,8 +16,6 @@ class MyClient(discord.Client):
     
     async def on_ready(self):
         guild = self.get_guild(GUILD_ID)
-        for voicechannel in guild.voice_channels:
-            channelonoff[voicechannel.id] = True
         print('connected')
     
     async def setup_hook(self) -> None:
@@ -27,7 +26,7 @@ class MyClient(discord.Client):
         if not after.channel: return
         
         # 通知対象のチャンネルではないなら何もしない
-        if not channelonoff[after.channel.id]: return
+        if not is_target_channel.get(after.channel.id, False): return
 
         # チャンネルを移動していないなら何もしない
         if before.channel == after.channel: return
@@ -85,7 +84,7 @@ class MyClient(discord.Client):
         if not before.channel: return
 
         # 通知対象のチャンネルではないなら何もしない
-        if not channelonoff.get(before.channel.id, False): return
+        if not is_target_channel.get(before.channel.id, False): return
         
         # 変化前のチャンネルの現在のメンバー数が0なら通話終了
         if len(before.channel.members) == 0:
