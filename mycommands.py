@@ -108,17 +108,16 @@ class CallNotification(app_commands.Group):
                 ),
             )
             self.channelname = channelname
-            self.chnanelid = channelid
+            self.channelid = channelid
             self.onoff = onoff
 
         async def callback(self, interaction: discord.Interaction):
-            global is_target_channel
-            is_target_channel[self.chnanelid] = not is_target_channel.get(
-                self.chnanelid, True
+            params.is_target_channel[self.channelid] = not params.is_target_channel.get(
+                self.channelid, True
             )
-            save_is_target_channel(self.chnanelid, is_target_channel[self.chnanelid])
+            save_is_target_channel(self.channelid, params.is_target_channel[self.channelid])
             await interaction.response.edit_message(
-                content=f'{self.channelname}を{"オン" if is_target_channel[self.chnanelid] else "オフ"}に切り替えました',
+                content=f'{self.channelname}を{"オン" if params.is_target_channel.get(self.channelid, None) else "オフ"}に切り替えました',
                 view=None,
             )
 
@@ -148,7 +147,7 @@ class CallNotification(app_commands.Group):
             content="オンオフを切り替えられます。(青がオン)", view=view
         )
 
-    @app_commands.command(name="offlist", description="オフにするチャンネルを選べます")
+    @app_commands.command(name="offlist", description="チャンネルごとのONOFFを確認できます")
     async def offlist(self, interaction: Interaction):
         embed = discord.Embed(title="チャンネルのオンオフです", color=0x00E5FF)
         guild = self.client.get_guild(GUILD_ID)
