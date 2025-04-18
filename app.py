@@ -34,6 +34,7 @@ class MyClient(discord.Client):
         await self.tree.sync()
 
     async def start_call(self, before, after, member):
+        print('start call')
         # 変化後のチャンネルが存在しないなら通話開始ではない
         if not after.channel:
             print("after channel is None")
@@ -96,6 +97,7 @@ class MyClient(discord.Client):
         return elapsed_time_str
 
     async def end_call(self, before, after, member):
+        print("end call")
         # この関数はボイスチャンネルの状態が変化したときに呼び出される
         # beforeは変化前の状態、afterは変化後の状態
 
