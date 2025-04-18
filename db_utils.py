@@ -1,26 +1,32 @@
 import sqlite3
 
-DB_PATH = "bot_data.db"
+DB_PATH = "db/bot_data.db"
+
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     # notitext テーブル
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS notitext (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             text TEXT NOT NULL
         )
-    """)
+    """
+    )
     # is_target_channel テーブル
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS is_target_channel (
             channel_id INTEGER PRIMARY KEY,
             is_target BOOLEAN NOT NULL
         )
-    """)
+    """
+    )
     conn.commit()
     conn.close()
+
 
 def save_notitext(text):
     conn = sqlite3.connect(DB_PATH)
@@ -30,6 +36,7 @@ def save_notitext(text):
     conn.commit()
     conn.close()
 
+
 def load_notitext():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -38,15 +45,20 @@ def load_notitext():
     conn.close()
     return row[0] if row else "@everyone"  # デフォルト値
 
+
 def save_is_target_channel(channel_id, is_target):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT OR REPLACE INTO is_target_channel (channel_id, is_target)
         VALUES (?, ?)
-    """, (channel_id, is_target))
+    """,
+        (channel_id, is_target),
+    )
     conn.commit()
     conn.close()
+
 
 def load_is_target_channels():
     conn = sqlite3.connect(DB_PATH)
