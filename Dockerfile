@@ -6,7 +6,7 @@ WORKDIR /app
 
 COPY . /app
 
-RUN apt install build-essential
+RUN apt install -y build-essential gcc
 
 RUN pip install --upgrade pip
 RUN pip install --upgrade setuptools
