@@ -115,11 +115,6 @@ class MyClient(discord.Client):
             e_time[before.channel.id] = 0
             await channel.send(embed=embed)
             return
-<<<<<<< HEAD
-        
-    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-        print("voice state update")
-=======
 
     async def on_voice_state_update(
         self,
@@ -127,7 +122,7 @@ class MyClient(discord.Client):
         before: discord.VoiceState,
         after: discord.VoiceState,
     ):
->>>>>>> main
+        print("voice state update")
         # 通話終了通知
         await self.end_call(before, after, member)
         # 通話開始通知
