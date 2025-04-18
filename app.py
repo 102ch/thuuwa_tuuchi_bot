@@ -104,6 +104,7 @@ class MyClient(discord.Client):
             return
         
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+        print("voice state update")
         # 通話終了通知
         await self.end_call(before, after, member)
         # 通話開始通知
