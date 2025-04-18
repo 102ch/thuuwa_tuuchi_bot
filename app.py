@@ -6,7 +6,7 @@ from mycommands import CallNotification
 from bot_config import *
 from params import *
 import params
-from db_utils import init_db
+import db_utils
 
 
 class MyClient(discord.Client):
@@ -18,11 +18,16 @@ class MyClient(discord.Client):
         super().__init__(intents=intents)
         self.tree = CommandTree(self)
         self.tree.add_command(CallNotification("callnotion", client=self))
-        init_db()
+        db_utils.init_db()
 
     async def on_ready(self):
         guild = self.get_guild(GUILD_ID)
         print("connected")
+        if len(db_utils.load_is_target_channels()) == 0:
+            for channel in guild.voice_channels:
+                print(channel.name)
+                print(channel.id)
+                is_target_channel[channel.id] = True
 
     async def setup_hook(self) -> None:
         await self.tree.sync()
