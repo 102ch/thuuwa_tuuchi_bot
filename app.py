@@ -28,6 +28,7 @@ class MyClient(discord.Client):
                 print(channel.name)
                 print(channel.id)
                 is_target_channel[channel.id] = True
+                db_utils.save_is_target_channel(channel.id, True)
 
     async def setup_hook(self) -> None:
         await self.tree.sync()
