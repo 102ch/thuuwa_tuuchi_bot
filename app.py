@@ -26,7 +26,7 @@ class MyClient(discord.Client):
         if not after.channel: return
         
         # 通知対象のチャンネルではないなら何もしない
-        if not is_target_channel[after.channel.id]: return
+        if not is_target_channel.get(after.channel.id, False): return
 
         # チャンネルを移動していないなら何もしない
         if before.channel == after.channel: return
