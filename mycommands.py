@@ -117,7 +117,7 @@ class CallNotification(app_commands.Group):
             )
             save_is_target_channel(self.channelid, params.is_target_channel[self.channelid])
             await interaction.response.edit_message(
-                content=f'{self.channelname}を{"オン" if params.is_target_channel[self.channelid] else "オフ"}に切り替えました',
+                content=f'{self.channelname}を{"オン" if params.is_target_channel.get(self.channelid, None) else "オフ"}に切り替えました',
                 view=None,
             )
 
