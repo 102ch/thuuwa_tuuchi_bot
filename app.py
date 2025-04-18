@@ -22,39 +22,38 @@ class MyClient(discord.Client):
     async def setup_hook(self) -> None:
         await self.tree.sync()
         
-    def is_call_start(self, before, after, member):
-        # voice state update後のチャンネルが存在しないなら通話開始ではない
-        if after.channel == None: return False
-
-        # 通話開始かどうかの判断
-        is_different_voice_channel = before.channel != after.channel
-        member_count_after = len(after.channel.members)
-        is_start_call = is_different_voice_channel and member_count_after == 1
-        
-        return is_start_call
-    
     async def start_call(self, before, after, member):
-        if after.channel == None: return
-        if channelonoff[after.channel.id] == False: return
+        # 変化後のチャンネルが存在しないなら通話開始ではない
+        if not after.channel: return
         
-        if self.is_call_start(before, after, member):
-            print("voice state update2")
-            if member.status == discord.Status.idle: return
+        # 通知対象のチャンネルではないなら何もしない
+        if not channelonoff[after.channel.id]: return
+
+        # チャンネルを移動していないなら何もしない
+        if before.channel == after.channel: return
+
+        # チャンネルに人がいないなら通話開始ではない
+        if len(after.channel.members) == 0: return
+
+        # チャンネルの人数が2人以上なら通話開始ではない
+        if len(after.channel.members) > 1: return
+        
+        print("voice state update2")
+        print(channel_id)
+        try:
             print(channel_id)
-            try:
-                print(channel_id)
-                channel = self.get_channel(channel_id)
-                embed = discord.Embed(title="通話開始", color=0xffb6c1)
-                embed.add_field(name="チャンネル", value=after.channel.name, inline=False)
-                embed.add_field(name="始めた人", value=member.display_name, inline=False)
-                current_time = datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
-                e_time[after.channel.id] = current_time
-                current_time_str = current_time.strftime('%Y-%m-%d %X')
-                embed.add_field(name="始めた時刻", value=current_time_str, inline=False)
-                embed.set_thumbnail(url=member.display_avatar.url)
-                await channel.send(content=params.notitext, embed=embed)
-            except Exception as e:
-                print(e)
+            channel = self.get_channel(channel_id)
+            embed = discord.Embed(title="通話開始", color=0xffb6c1)
+            embed.add_field(name="チャンネル", value=after.channel.name, inline=False)
+            embed.add_field(name="始めた人", value=member.display_name, inline=False)
+            current_time = datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
+            e_time[after.channel.id] = current_time
+            current_time_str = current_time.strftime('%Y-%m-%d %X')
+            embed.add_field(name="始めた時刻", value=current_time_str, inline=False)
+            embed.set_thumbnail(url=member.display_avatar.url)
+            await channel.send(content=params.notitext, embed=embed)
+        except Exception as e:
+            print(e)
     
     def format_timedelta(self, timedelta):
         total_sec = timedelta.total_seconds()
