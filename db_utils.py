@@ -83,10 +83,12 @@ def load_notitext() -> str:
 
 def save_is_target_channel(channel_id: int, is_target: bool):
     """チャンネル設定をD1に保存"""
-    execute_d1_query(
+    print(f"[DB] Saving is_target_channel: channel_id={channel_id}, is_target={is_target}")
+    result = execute_d1_query(
         "INSERT OR REPLACE INTO is_target_channel (channel_id, is_target) VALUES (?, ?)",
         [channel_id, 1 if is_target else 0]
     )
+    print(f"[DB] save_is_target_channel result: {result}")
 
 
 def load_is_target_channels() -> Dict[int, bool]:
@@ -102,10 +104,12 @@ def load_is_target_channels() -> Dict[int, bool]:
 
 def save_channel_id(channel_id: int):
     """通知先チャンネルIDをD1に保存"""
-    execute_d1_query(
+    print(f"[DB] Saving channel_id: {channel_id}")
+    result = execute_d1_query(
         "INSERT OR REPLACE INTO bot_settings (key, value) VALUES (?, ?)",
         ["channel_id", str(channel_id)]
     )
+    print(f"[DB] save_channel_id result: {result}")
 
 
 def load_channel_id() -> Optional[int]:
@@ -121,10 +125,12 @@ def load_channel_id() -> Optional[int]:
 
 def save_call_end_notification_enabled(enabled: bool):
     """終了通知設定をD1に保存"""
-    execute_d1_query(
+    print(f"[DB] Saving is_call_end_notification_enabled: {enabled}")
+    result = execute_d1_query(
         "INSERT OR REPLACE INTO bot_settings (key, value) VALUES (?, ?)",
         ["is_call_end_notification_enabled", "1" if enabled else "0"]
     )
+    print(f"[DB] save_call_end_notification_enabled result: {result}")
 
 
 def load_call_end_notification_enabled() -> Optional[bool]:
