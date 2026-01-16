@@ -1,4 +1,4 @@
-FROM python:3.10-slim as builder
+FROM python:3.10-slim AS builder
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy only necessary files
 COPY app.py mycommands.py params.py bot_config.py db_utils.py ./
 
-FROM python:3.10-slim-buster as production
+FROM python:3.10-slim-buster AS production
 
 WORKDIR /app
 
