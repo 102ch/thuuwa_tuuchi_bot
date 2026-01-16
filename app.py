@@ -23,6 +23,15 @@ class MyClient(discord.Client):
     async def on_ready(self):
         guild = self.get_guild(GUILD_ID)
         print("connected")
+
+        # channel_id と is_call_end_notification_enabled がDBになければ初期値を保存
+        if db_utils.load_channel_id() is None:
+            db_utils.save_channel_id(params.channel_id)
+            print(f"[DB] Saved initial channel_id: {params.channel_id}")
+        if db_utils.load_call_end_notification_enabled() is None:
+            db_utils.save_call_end_notification_enabled(params.is_call_end_notification_enabled)
+            print(f"[DB] Saved initial is_call_end_notification_enabled: {params.is_call_end_notification_enabled}")
+
         # データベースから現在のターゲットチャンネル設定を読み込む
         current_channels = db_utils.load_is_target_channels()
 

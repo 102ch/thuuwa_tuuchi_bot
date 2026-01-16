@@ -157,6 +157,7 @@ class CallNotification(app_commands.Group):
 
     @app_commands.command(name="offlist", description="チャンネルごとのONOFFを確認できます")
     async def offlist(self, interaction: Interaction):
+        await interaction.response.defer()  # タイムアウト防止
         embed = discord.Embed(title="チャンネルのオンオフです", color=0x00E5FF)
         guild = self.client.get_guild(GUILD_ID)
         for voicechannel in guild.voice_channels:
@@ -165,7 +166,7 @@ class CallNotification(app_commands.Group):
                 value=":o:" if is_target_channel.get(voicechannel.id, True) else ":x:",
                 inline=False,
             )
-        await interaction.response.send_message(embed=embed)
+        await interaction.followup.send(embed=embed)
 
     @app_commands.command(
         name="getnotiontext", description="通知時のテキストの現在の設定値の確認用です。"
