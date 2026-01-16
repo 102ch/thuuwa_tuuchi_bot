@@ -1,6 +1,9 @@
 import os
+import logging
 import requests
 from typing import Optional, Dict, List
+
+logger = logging.getLogger(__name__)
 
 # D1設定（環境変数から読み込み）
 D1_ACCOUNT_ID = os.environ.get("D1_ACCOUNT_ID")
@@ -35,7 +38,7 @@ def execute_d1_query(sql: str, params: Optional[List] = None) -> dict:
         return data["result"][0] if data.get("result") else {}
 
     except requests.exceptions.RequestException as e:
-        print(f"D1 API request failed: {e}")
+        logger.error(f"D1 API request failed: {e}")
         raise
 
 
@@ -50,7 +53,7 @@ def init_db():
 
     execute_d1_query("""
         CREATE TABLE IF NOT EXISTS is_target_channel (
-            channel_id INTEGER PRIMARY KEY,
+            channel_id TEXT PRIMARY KEY,
             is_target BOOLEAN NOT NULL
         )
     """)
@@ -61,7 +64,7 @@ def init_db():
             value TEXT NOT NULL
         )
     """)
-    print("D1 database initialized")
+    logger.info("D1 database initialized")
 
 
 def save_notitext(text: str):
@@ -82,34 +85,39 @@ def load_notitext() -> str:
 
 
 def save_is_target_channel(channel_id: int, is_target: bool):
-    """チャンネル設定をD1に保存"""
-    print(f"[DB] Saving is_target_channel: channel_id={channel_id}, is_target={is_target}")
+    """チャンネル設定をD1に保存（channel_idは文字列として保存）"""
+    logger.debug(f"Saving is_target_channel: channel_id={channel_id}, is_target={is_target}")
     result = execute_d1_query(
         "INSERT OR REPLACE INTO is_target_channel (channel_id, is_target) VALUES (?, ?)",
-        [channel_id, 1 if is_target else 0]
+        [str(channel_id), 1 if is_target else 0]
     )
-    print(f"[DB] save_is_target_channel result: {result}")
+    logger.debug(f"save_is_target_channel result: {result}")
 
 
 def load_is_target_channels() -> Dict[int, bool]:
-    """全チャンネル設定をD1から読み込み"""
+    """全チャンネル設定をD1から読み込み（channel_idは文字列として保存されている）"""
     result = execute_d1_query("SELECT channel_id, is_target FROM is_target_channel")
     results = result.get("results", [])
 
-    return {
-        int(row["channel_id"]): bool(row["is_target"])
-        for row in results
-    }
+    channels = {}
+    for row in results:
+        # channel_idは文字列として保存されているので、そのままintに変換
+        channel_id = int(row["channel_id"])
+        # D1は0/1を返すが、文字列の場合もあるので明示的に比較
+        is_target = row["is_target"] in (1, "1", True)
+        channels[channel_id] = is_target
+        logger.debug(f"Loaded channel {channel_id}: is_target={is_target}")
+    return channels
 
 
 def save_channel_id(channel_id: int):
     """通知先チャンネルIDをD1に保存"""
-    print(f"[DB] Saving channel_id: {channel_id}")
+    logger.debug(f"Saving channel_id: {channel_id}")
     result = execute_d1_query(
         "INSERT OR REPLACE INTO bot_settings (key, value) VALUES (?, ?)",
         ["channel_id", str(channel_id)]
     )
-    print(f"[DB] save_channel_id result: {result}")
+    logger.debug(f"save_channel_id result: {result}")
 
 
 def load_channel_id() -> Optional[int]:
@@ -125,12 +133,12 @@ def load_channel_id() -> Optional[int]:
 
 def save_call_end_notification_enabled(enabled: bool):
     """終了通知設定をD1に保存"""
-    print(f"[DB] Saving is_call_end_notification_enabled: {enabled}")
+    logger.debug(f"Saving is_call_end_notification_enabled: {enabled}")
     result = execute_d1_query(
         "INSERT OR REPLACE INTO bot_settings (key, value) VALUES (?, ?)",
         ["is_call_end_notification_enabled", "1" if enabled else "0"]
     )
-    print(f"[DB] save_call_end_notification_enabled result: {result}")
+    logger.debug(f"save_call_end_notification_enabled result: {result}")
 
 
 def load_call_end_notification_enabled() -> Optional[bool]:

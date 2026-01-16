@@ -2,11 +2,20 @@ import discord
 from discord.app_commands import CommandTree
 import datetime
 import pytz
+import logging
+import os
 from mycommands import CallNotification
 from bot_config import *
-from params import *
-import params
+from params import e_time
 import db_utils
+
+# ログ設定
+LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 
 class MyClient(discord.Client):
@@ -22,66 +31,60 @@ class MyClient(discord.Client):
 
     async def on_ready(self):
         guild = self.get_guild(GUILD_ID)
-        print("connected")
-
-        # channel_id と is_call_end_notification_enabled がDBになければ初期値を保存
-        if db_utils.load_channel_id() is None:
-            db_utils.save_channel_id(params.channel_id)
-            print(f"[DB] Saved initial channel_id: {params.channel_id}")
-        if db_utils.load_call_end_notification_enabled() is None:
-            db_utils.save_call_end_notification_enabled(params.is_call_end_notification_enabled)
-            print(f"[DB] Saved initial is_call_end_notification_enabled: {params.is_call_end_notification_enabled}")
+        logger.info("connected")
 
         # データベースから現在のターゲットチャンネル設定を読み込む
         current_channels = db_utils.load_is_target_channels()
 
-        # すべてのボイスチャンネルをチェック
+        # 新しいボイスチャンネルがあればDBに追加（デフォルトは通知ON）
         for channel in guild.voice_channels:
-            print(channel.name)
-            print(channel.id)
-            # チャンネルがデータベースに存在しない場合は、Trueとして追加
+            logger.debug(f"Voice channel: {channel.name} ({channel.id})")
             if channel.id not in current_channels:
-                is_target_channel[channel.id] = True
                 db_utils.save_is_target_channel(channel.id, True)
-            else:
-                # 既存の設定を反映
-                is_target_channel[channel.id] = current_channels[channel.id]
+                logger.info(f"Added new voice channel: {channel.name}")
 
     async def setup_hook(self) -> None:
         await self.tree.sync()
 
     async def start_call(self, before, after, member):
-        print('start call')
+        logger.debug("start_call called")
         # 変化後のチャンネルが存在しないなら通話開始ではない
         if not after.channel:
-            print("after channel is None")
+            logger.debug("after channel is None")
             return
 
-        # 通知対象のチャンネルではないなら何もしない
-        if not is_target_channel.get(after.channel.id, False):
-            print("not target channel")
+        # 毎回DBから通知対象チャンネル設定を読み込む
+        target_channels = db_utils.load_is_target_channels()
+        if not target_channels.get(after.channel.id, False):
+            logger.debug("not target channel")
             return
 
         # チャンネルを移動していないなら何もしない
         if before.channel == after.channel:
-            print("not moved")
+            logger.debug("not moved")
             return
 
         # チャンネルに人がいないなら通話開始ではない
         if len(after.channel.members) == 0:
-            print("no members")
+            logger.debug("no members")
             return
 
         # チャンネルの人数が2人以上なら通話開始ではない
         if len(after.channel.members) > 1:
-            print("more than 2 members")
+            logger.debug("more than 2 members")
             return
 
-        print("voice state update2")
-        print(params.channel_id)
+        logger.debug("sending start call notification")
         try:
-            print(params.channel_id)
-            channel = self.get_channel(params.channel_id)
+            # 毎回DBから通知先チャンネルIDを読み込む
+            notification_channel_id = db_utils.load_channel_id()
+            if notification_channel_id is None:
+                logger.warning("notification channel_id is not set in DB")
+                return
+            logger.debug(f"notification_channel_id: {notification_channel_id}")
+            channel = self.get_channel(notification_channel_id)
+            # 毎回DBから通知テキストを読み込む
+            notification_text = db_utils.load_notitext()
             embed = discord.Embed(title="通話開始", color=0xFFB6C1)
             embed.add_field(name="チャンネル", value=after.channel.name, inline=False)
             embed.add_field(name="始めた人", value=member.display_name, inline=False)
@@ -90,9 +93,9 @@ class MyClient(discord.Client):
             current_time_str = current_time.strftime("%Y-%m-%d %X")
             embed.add_field(name="始めた時刻", value=current_time_str, inline=False)
             embed.set_thumbnail(url=member.display_avatar.url)
-            await channel.send(content=params.notitext, embed=embed)
+            await channel.send(content=notification_text, embed=embed)
         except Exception as e:
-            print(e)
+            logger.error(f"Error in start_call: {e}")
 
     def format_timedelta(self, timedelta):
         total_sec = timedelta.total_seconds()
@@ -114,28 +117,35 @@ class MyClient(discord.Client):
         return elapsed_time_str
 
     async def end_call(self, before, after, member):
-        print("end call")
+        logger.debug("end_call called")
         # この関数はボイスチャンネルの状態が変化したときに呼び出される
         # beforeは変化前の状態、afterは変化後の状態
 
-        # 通話終了通知をしない設定になっているなら何もしない
-        if not is_call_end_notification_enabled:
-            print("通話終了通知をしない設定になっています")
+        # 毎回DBから通話終了通知設定を読み込む
+        end_notification_enabled = db_utils.load_call_end_notification_enabled()
+        if not end_notification_enabled:
+            logger.debug("end call notification disabled")
             return
 
         # 変化前のチャンネルが存在しないなら通話終了ではない
         if not before.channel:
-            print("before channel is None")
+            logger.debug("before channel is None")
             return
 
-        # 通知対象のチャンネルではないなら何もしない
-        if not is_target_channel.get(before.channel.id, False):
-            print("not target channel")
+        # 毎回DBから通知対象チャンネル設定を読み込む
+        target_channels = db_utils.load_is_target_channels()
+        if not target_channels.get(before.channel.id, False):
+            logger.debug("not target channel")
             return
 
         # 変化前のチャンネルの現在のメンバー数が0なら通話終了
         if len(before.channel.members) == 0:
-            channel = self.get_channel(params.channel_id)
+            # 毎回DBから通知先チャンネルIDを読み込む
+            notification_channel_id = db_utils.load_channel_id()
+            if notification_channel_id is None:
+                logger.warning("notification channel_id is not set in DB")
+                return
+            channel = self.get_channel(notification_channel_id)
             embed = discord.Embed(title="通話終了", color=0x6A5ACD)
             embed.add_field(name="チャンネル", value=before.channel.name, inline=False)
             elapsed_time_str: str = self.get_elapsed_time(e_time[before.channel.id])
@@ -150,7 +160,7 @@ class MyClient(discord.Client):
         before: discord.VoiceState,
         after: discord.VoiceState,
     ):
-        print("voice state update")
+        logger.debug("voice state update")
         # 通話終了通知
         await self.end_call(before, after, member)
         # 通話開始通知

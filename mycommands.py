@@ -1,9 +1,15 @@
 import discord
 from discord import app_commands, Interaction, ui
-from params import *
 from bot_config import *
-import params
-from db_utils import save_notitext, save_is_target_channel, save_channel_id, save_call_end_notification_enabled
+from db_utils import (
+    save_notitext, save_is_target_channel, save_channel_id, save_call_end_notification_enabled,
+    load_notitext, load_is_target_channels
+)
+from params import e_time  # e_timeのみ使用（通話時間計測用）
+
+# デフォルト値（リセット用）
+DEFAULT_TEXT = "@everyone"
+DEFAULT_END_NOTIFICATION = True
 
 
 class CallNotification(app_commands.Group):
@@ -15,9 +21,7 @@ class CallNotification(app_commands.Group):
         name="set", description="通知お知らせ君がこのチャンネルに降臨するよ！"
     )
     async def set(self, interaction: Interaction):
-        global channel_id
-        channel_id = interaction.channel.id
-        save_channel_id(channel_id)  # データベースに保存
+        save_channel_id(interaction.channel.id)  # データベースに保存
         await interaction.response.send_message("変更しました！")
 
     class CallEndNotificationChangeButton(ui.Button):
@@ -27,8 +31,6 @@ class CallNotification(app_commands.Group):
             self.change = change
 
         async def callback(self, interaction: discord.Interaction):
-            global is_call_end_notification_enabled
-            is_call_end_notification_enabled = self.change
             save_call_end_notification_enabled(self.change)  # データベースに保存
             await interaction.response.edit_message(
                 content=f"{self.label}に変更します", view=None
@@ -49,43 +51,31 @@ class CallNotification(app_commands.Group):
 
     @app_commands.command(name="textchange", description="通知時のテキストを変更します")
     async def textchange(self, interaction: Interaction, newtext: str):
-        params.notitext = newtext
         save_notitext(newtext)  # データベースに保存
         await interaction.response.send_message(
-            content=f"「{params.notitext}」に変更します!"
+            content=f"「{newtext}」に変更します!"
         )
 
     class resetbutton(ui.Button):
-        def __init__(self, label, initial, client):
+        def __init__(self, label, reset_type, client):
             super().__init__(label=label)
             self.label = label
-            self.initial = initial
+            self.reset_type = reset_type
             self.client = client
 
         async def callback(self, interaction: discord.Interaction):
-            global channel_id, is_call_end_notification_enabled, notitext
-            if self.initial == INITIAL_CHANNEL:
-                channel_id = INITIAL_CHANNEL
-                save_channel_id(INITIAL_CHANNEL)  # データベースに保存
-                resetmessage = self.client.get_channel(INITIAL_CHANNEL).name
-            elif self.initial == INITIAL_FLAG:
-                is_call_end_notification_enabled = INITIAL_FLAG
-                save_call_end_notification_enabled(INITIAL_FLAG)  # データベースに保存
+            if self.reset_type == "end_notification":
+                save_call_end_notification_enabled(DEFAULT_END_NOTIFICATION)  # データベースに保存
                 resetmessage = "終了時にも通知を行う"
-            elif self.initial == INITIAL_TEXT:
-                notitext = INITIAL_TEXT
-                save_notitext(INITIAL_TEXT)  # データベースに保存
-                resetmessage = INITIAL_TEXT
-            elif self.initial == "allreset":
-                channel_id = INITIAL_CHANNEL
-                is_call_end_notification_enabled = INITIAL_FLAG
-                notitext = INITIAL_TEXT
-                save_channel_id(INITIAL_CHANNEL)  # データベースに保存
-                save_call_end_notification_enabled(INITIAL_FLAG)  # データベースに保存
-                save_notitext(INITIAL_TEXT)  # データベースに保存
-                resetmessage = self.initial
+            elif self.reset_type == "notitext":
+                save_notitext(DEFAULT_TEXT)  # データベースに保存
+                resetmessage = DEFAULT_TEXT
+            elif self.reset_type == "allreset":
+                save_call_end_notification_enabled(DEFAULT_END_NOTIFICATION)  # データベースに保存
+                save_notitext(DEFAULT_TEXT)  # データベースに保存
+                resetmessage = "終了時通知と通知テキストをリセットしました"
                 await interaction.response.edit_message(
-                    content=f"{resetmessage}", view=None
+                    content=resetmessage, view=None
                 )
                 return
             await interaction.response.edit_message(
@@ -93,64 +83,64 @@ class CallNotification(app_commands.Group):
             )
 
     @app_commands.command(
-        name="reset", description="三つの変更可能項目についてリセットできます"
+        name="reset", description="設定をリセットできます"
     )
     async def reset(self, interaction: Interaction):
         view = ui.View()
-        view.add_item(self.resetbutton("送信チャンネル", INITIAL_CHANNEL, self.client))
-        view.add_item(self.resetbutton("終了時通知", INITIAL_FLAG, self.client))
-        view.add_item(self.resetbutton("通知時テキスト", INITIAL_TEXT, self.client))
+        view.add_item(self.resetbutton("終了時通知", "end_notification", self.client))
+        view.add_item(self.resetbutton("通知時テキスト", "notitext", self.client))
         view.add_item(self.resetbutton("全て", "allreset", self.client))
         await interaction.response.send_message(
             content="リセットする項目について選んでください", view=view
         )
 
-    class onoffbutton(ui.Button):
-        def __init__(self, channelname, channelid, onoff):
-            super().__init__(
-                label=channelname,
-                style=(
-                    discord.ButtonStyle.primary
-                    if onoff
-                    else discord.ButtonStyle.secondary
-                ),
-            )
-            self.channelname = channelname
-            self.channelid = channelid
-            self.onoff = onoff
+    class OffChannelView(ui.View):
+        def __init__(self, client):
+            super().__init__(timeout=180)  # 3分でタイムアウト
+            self.client = client
+            self._build_buttons()
 
-        async def callback(self, interaction: discord.Interaction):
-            params.is_target_channel[self.channelid] = not params.is_target_channel.get(
-                self.channelid, True
-            )
-            save_is_target_channel(self.channelid, params.is_target_channel[self.channelid])
-            await interaction.response.edit_message(
-                content=f'{self.channelname}を{"オン" if params.is_target_channel.get(self.channelid, None) else "オフ"}に切り替えました',
-                view=None,
-            )
+        def _build_buttons(self):
+            self.clear_items()
+            guild = self.client.get_guild(GUILD_ID)
+            current_channels = load_is_target_channels()
+            for voicechannel in guild.voice_channels:
+                is_on = current_channels.get(voicechannel.id, True)
+                button = ui.Button(
+                    label=voicechannel.name,
+                    style=discord.ButtonStyle.primary if is_on else discord.ButtonStyle.secondary,
+                    custom_id=f"toggle_{voicechannel.id}",
+                )
+                button.callback = self._make_toggle_callback(voicechannel.name, voicechannel.id)
+                self.add_item(button)
+            cancel_button = ui.Button(label="中止", style=discord.ButtonStyle.red, custom_id="cancel")
+            cancel_button.callback = self._cancel_callback
+            self.add_item(cancel_button)
 
-    class chancel_button(ui.Button):
-        def __init__(self):
-            super().__init__(label="中止", style=discord.ButtonStyle.red)
+        def _make_toggle_callback(self, channelname, channelid):
+            async def callback(interaction: discord.Interaction):
+                current_channels = load_is_target_channels()
+                current_value = current_channels.get(channelid, True)
+                new_value = not current_value
+                save_is_target_channel(channelid, new_value)
+                self._build_buttons()
+                await interaction.response.edit_message(
+                    content=f'{channelname}を{"オン" if new_value else "オフ"}に切り替えました。(青がオン)',
+                    view=self,
+                )
+            return callback
 
-        async def callback(self, interaction: discord.Interaction):
-            await interaction.response.edit_message(content="変更しません", view=None)
+        async def _cancel_callback(self, interaction: discord.Interaction):
+            await interaction.response.edit_message(content="変更を終了しました", view=None)
+
+        async def on_timeout(self):
+            pass  # タイムアウト時は何もしない（メッセージは残る）
 
     @app_commands.command(
         name="offchannel", description="オフにするチャンネルを選べます"
     )
     async def offchannel(self, interaction: Interaction):
-        view = ui.View()
-        guild = self.client.get_guild(GUILD_ID)
-        for voicechannel in guild.voice_channels:
-            view.add_item(
-                self.onoffbutton(
-                    voicechannel.name,
-                    voicechannel.id,
-                    is_target_channel.get(voicechannel.id, True),
-                )
-            )
-        view.add_item(self.chancel_button())
+        view = self.OffChannelView(self.client)
         await interaction.response.send_message(
             content="オンオフを切り替えられます。(青がオン)", view=view
         )
@@ -160,10 +150,12 @@ class CallNotification(app_commands.Group):
         await interaction.response.defer()  # タイムアウト防止
         embed = discord.Embed(title="チャンネルのオンオフです", color=0x00E5FF)
         guild = self.client.get_guild(GUILD_ID)
+        # DBから最新の状態を読み込む
+        current_channels = load_is_target_channels()
         for voicechannel in guild.voice_channels:
             embed.add_field(
                 name=voicechannel.name,
-                value=":o:" if is_target_channel.get(voicechannel.id, True) else ":x:",
+                value=":o:" if current_channels.get(voicechannel.id, True) else ":x:",
                 inline=False,
             )
         await interaction.followup.send(embed=embed)
@@ -172,6 +164,8 @@ class CallNotification(app_commands.Group):
         name="getnotiontext", description="通知時のテキストの現在の設定値の確認用です。"
     )
     async def getnotiontext(self, interaction: Interaction):
+        # DBから最新の状態を読み込む
+        current_text = load_notitext()
         await interaction.response.send_message(
-            content=f"現在の通知時テキストは「{params.notitext}」です。", silent=True
+            content=f"現在の通知時テキストは「{current_text}」です。", silent=True
         )
