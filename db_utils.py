@@ -54,6 +54,13 @@ def init_db():
             is_target BOOLEAN NOT NULL
         )
     """)
+
+    execute_d1_query("""
+        CREATE TABLE IF NOT EXISTS bot_settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        )
+    """)
     print("D1 database initialized")
 
 
@@ -91,3 +98,41 @@ def load_is_target_channels() -> Dict[int, bool]:
         int(row["channel_id"]): bool(row["is_target"])
         for row in results
     }
+
+
+def save_channel_id(channel_id: int):
+    """通知先チャンネルIDをD1に保存"""
+    execute_d1_query(
+        "INSERT OR REPLACE INTO bot_settings (key, value) VALUES (?, ?)",
+        ["channel_id", str(channel_id)]
+    )
+
+
+def load_channel_id() -> Optional[int]:
+    """通知先チャンネルIDをD1から読み込み"""
+    result = execute_d1_query("SELECT value FROM bot_settings WHERE key = ?", ["channel_id"])
+    results = result.get("results", [])
+
+    if results and len(results) > 0:
+        return int(results[0]["value"])
+
+    return None
+
+
+def save_call_end_notification_enabled(enabled: bool):
+    """終了通知設定をD1に保存"""
+    execute_d1_query(
+        "INSERT OR REPLACE INTO bot_settings (key, value) VALUES (?, ?)",
+        ["is_call_end_notification_enabled", "1" if enabled else "0"]
+    )
+
+
+def load_call_end_notification_enabled() -> Optional[bool]:
+    """終了通知設定をD1から読み込み"""
+    result = execute_d1_query("SELECT value FROM bot_settings WHERE key = ?", ["is_call_end_notification_enabled"])
+    results = result.get("results", [])
+
+    if results and len(results) > 0:
+        return results[0]["value"] == "1"
+
+    return None

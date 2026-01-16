@@ -3,7 +3,7 @@ from discord import app_commands, Interaction, ui
 from params import *
 from bot_config import *
 import params
-from db_utils import save_notitext, save_is_target_channel
+from db_utils import save_notitext, save_is_target_channel, save_channel_id, save_call_end_notification_enabled
 
 
 class CallNotification(app_commands.Group):
@@ -17,6 +17,7 @@ class CallNotification(app_commands.Group):
     async def set(self, interaction: Interaction):
         global channel_id
         channel_id = interaction.channel.id
+        save_channel_id(channel_id)  # データベースに保存
         await interaction.response.send_message("変更しました！")
 
     class CallEndNotificationChangeButton(ui.Button):
@@ -28,6 +29,7 @@ class CallNotification(app_commands.Group):
         async def callback(self, interaction: discord.Interaction):
             global is_call_end_notification_enabled
             is_call_end_notification_enabled = self.change
+            save_call_end_notification_enabled(self.change)  # データベースに保存
             await interaction.response.edit_message(
                 content=f"{self.label}に変更します", view=None
             )
@@ -64,17 +66,23 @@ class CallNotification(app_commands.Group):
             global channel_id, is_call_end_notification_enabled, notitext
             if self.initial == INITIAL_CHANNEL:
                 channel_id = INITIAL_CHANNEL
+                save_channel_id(INITIAL_CHANNEL)  # データベースに保存
                 resetmessage = self.client.get_channel(INITIAL_CHANNEL).name
             elif self.initial == INITIAL_FLAG:
                 is_call_end_notification_enabled = INITIAL_FLAG
+                save_call_end_notification_enabled(INITIAL_FLAG)  # データベースに保存
                 resetmessage = "終了時にも通知を行う"
             elif self.initial == INITIAL_TEXT:
                 notitext = INITIAL_TEXT
+                save_notitext(INITIAL_TEXT)  # データベースに保存
                 resetmessage = INITIAL_TEXT
             elif self.initial == "allreset":
                 channel_id = INITIAL_CHANNEL
                 is_call_end_notification_enabled = INITIAL_FLAG
                 notitext = INITIAL_TEXT
+                save_channel_id(INITIAL_CHANNEL)  # データベースに保存
+                save_call_end_notification_enabled(INITIAL_FLAG)  # データベースに保存
+                save_notitext(INITIAL_TEXT)  # データベースに保存
                 resetmessage = self.initial
                 await interaction.response.edit_message(
                     content=f"{resetmessage}", view=None
